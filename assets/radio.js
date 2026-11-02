@@ -15,6 +15,7 @@
   var src = window.RADIO_AUDIO || "assets/radio.mp3";
   var audio = new Audio(src);
   audio.preload = "none";
+  window.__RADIOAUDIO = audio;
   var playing = false;
 
   function reset() {
