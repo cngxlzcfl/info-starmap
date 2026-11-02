@@ -10,6 +10,7 @@
   var muted = style.getPropertyValue("--muted").trim();
 
   var SRC_META = [
+    { match: "情报后台", c: "#ffb86b" },
     { match: "V2EX", c: "#7d9bff" },
     { match: "HackerNews", c: "#ff8a5c" },
     { match: "SideProject", c: "#ffd166" },
@@ -121,6 +122,13 @@
   }
   buildEvents();
   window.addEventListener("starmaplang", buildEvents);
+
+  /* --- 情报后台接入情况 --- */
+  var intelNote = document.getElementById("intelNote");
+  if (intelNote && S.intel && S.intel.count) {
+    intelNote.textContent = "情报后台接入 " + S.intel.count + " 条（" + S.intel.date +
+      "），合并掉重复 " + S.intel.merged + " 条，净增 " + S.intel.added + " 颗星。琥珀色圆圈的星有它一份。";
+  }
 
   /* --- 抓取异常如实播报 --- */
   if (S.errors && S.errors.length) {

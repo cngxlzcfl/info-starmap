@@ -72,6 +72,7 @@ body{
 .card .badge{font-size:11px;padding:2px 9px;border-radius:999px;border:1px solid var(--rule);color:var(--muted)}
 .card .badge.src{color:var(--bg);border:none;font-weight:700}
 .card .badge.fit{color:var(--accent2);border-color:rgba(255,184,107,.4)}
+.card .badge.intel{color:var(--accent2);border-color:rgba(255,184,107,.45)}
 .card .m{font-size:12.5px;color:var(--muted);line-height:1.75;margin-bottom:8px}
 .card .cmt{font-size:12px;color:var(--accent);line-height:1.7}
 .card .hint{margin-top:10px;font-size:11px;color:var(--muted);opacity:.75}
@@ -174,6 +175,7 @@ body.panel-open .fab{opacity:0;pointer-events:none}
     <figure class="chart-figure" style="margin:.4rem 0 0">
       <div id="chart-src" style="width:100%;min-height:230px"></div>
     </figure>
+    <div class="perr" id="intelNote" style="color:var(--accent2)"></div>
     <h4 id="evHead">今晚大事件（点名字飞过去看）</h4>
     <ol class="bright" id="events"></ol>
     <h4>今晚最亮的星（点名字飞过去看）</h4>
@@ -204,8 +206,8 @@ body.panel-open .fab{opacity:0;pointer-events:none}
 </div>
 
 <script src="./_shared/js/echarts.min.js"></script>
-<script src="assets/stardata.js?v=13"></script>
-<script src="assets/events.js?v=13"></script>
+<script src="assets/stardata.js?v=15"></script>
+<script src="assets/events.js?v=15"></script>
 <script>
 /* 时光机暗道：网址带 ?d=日期 时改吃那晚的历史快照；快照缺失自动弹回今晚 */
 (function(){
@@ -216,10 +218,10 @@ body.panel-open .fab{opacity:0;pointer-events:none}
   document.write('<script>if(!(window.STARDATA&&String(window.STARDATA.date||"").indexOf("' + m[1] + '")===0))location.replace(location.pathname);<\/script>');
 })();
 </script>
-<script src="assets/starmap.js?v=8"></script>
-<script src="assets/charts.js?v=6"></script>
+<script src="assets/starmap.js?v=9"></script>
+<script src="assets/charts.js?v=7"></script>
 <script src="assets/sound.js?v=1"></script>
-<script>window.RADIO_AUDIO = "assets/radio.mp3?v=4";</script>
+<script>window.RADIO_AUDIO = "assets/radio.mp3?v=5";</script>
 <script src="assets/radio.js?v=6"></script>
 <script src="assets/history_manifest.js"></script>
 <script src="assets/timemachine.js?v=1"></script>

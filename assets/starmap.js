@@ -14,6 +14,7 @@
 
   /* ---------- 信息源配色 ---------- */
   var SRC_META = [
+    { match: "情报后台", c: "#ffb86b" },
     { match: "V2EX", c: "#7d9bff" },
     { match: "HackerNews", c: "#ff8a5c" },
     { match: "SideProject", c: "#ffd166" },
@@ -34,7 +35,7 @@
   var W = 0, H = 0, DPR = 1;
   var view = { x: 0, y: 0, k: 1 };
   var hoverId = -1, mouse = { x: -1, y: -1 };
-  var soloSrc = null, isCN = false;
+  var soloSrc = null, soloIntel = false, isCN = false;
   var edges = [];
   var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -338,6 +339,12 @@
       ctx.fillStyle = "rgba(255,255,255," + (hov ? 0.95 : 0.55) * alpha + ")";
       ctx.beginPath(); ctx.arc(sp[0], sp[1], Math.max(0.6, r * 0.42), 0, 6.284); ctx.fill();
 
+      if (d.ib) {   // 情报后台参与过的星，外面加一圈琥珀色记号
+        ctx.strokeStyle = "rgba(255,184,107," + 0.62 * alpha + ")";
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(sp[0], sp[1], r + 3.4, 0, 6.284); ctx.stroke();
+      }
+
       if (hov) {
         ctx.strokeStyle = "rgba(255,255,255,.85)";
         ctx.lineWidth = 1;
@@ -380,7 +387,10 @@
     var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
     return "rgba(" + r + "," + g + "," + b + "," + a + ")";
   }
-  function isDim(d) { return soloSrc !== null && d.s !== soloSrc; }
+  function isDim(d) {
+    if (soloIntel) return !d.ib;
+    return soloSrc !== null && d.s !== soloSrc;
+  }
 
   /* ---------- 故事卡 ---------- */
   function esc(s) {
@@ -400,9 +410,11 @@
       ? '<span class="badge" style="color:' + EVENTS[evOf[i]].c + ';border-color:' +
         EVENTS[evOf[i]].c + ';font-weight:700">大事件：' + esc(EVENTS[evOf[i]].n) + "</span>"
       : "";
+    var ibb = (d.ib && d.s !== "情报后台")
+      ? '<span class="badge intel">情报后台也收录</span>' : "";
     document.getElementById("cardB").innerHTML =
       '<span class="badge src" style="background:' + d._c + '">' + esc(d.s) + "</span>" +
-      evb + (d.x ? '<span class="badge">' + esc(d.x) + "</span>" : "") + fit + mt;
+      ibb + evb + (d.x ? '<span class="badge">' + esc(d.x) + "</span>" : "") + fit + mt;
     document.getElementById("cardM").textContent = dispM(d) || "（这条没有摘要，点星星直接看原文）";
     document.getElementById("cardC").textContent = d.c ? "秘书点评：" + d.c : "";
     card.classList.add("show");
@@ -509,33 +521,61 @@
     var counts = {};
     items.forEach(function (d) { counts[d.s] = (counts[d.s] || 0) + 1; });
     var names = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; });
+
+    function refresh() {
+      Array.prototype.forEach.call(legendEl.children, function (c) {
+        c.classList.remove("solo", "off");
+        if (soloIntel) {
+          if (c.dataset.intel === "1") c.classList.add("solo"); else c.classList.add("off");
+        } else if (soloSrc) {
+          if (c.dataset.name === soloSrc) c.classList.add("solo"); else c.classList.add("off");
+        }
+      });
+    }
+
     names.forEach(function (name) {
       var chip = document.createElement("span");
       chip.className = "chip";
+      chip.dataset.name = name;
       chip.innerHTML = '<span class="dot" style="background:' + srcColor(name) + '"></span>' +
         esc(name) + ' <span class="n">' + counts[name] + "</span>";
       chip.addEventListener("click", function () {
+        soloIntel = false;
         soloSrc = (soloSrc === name) ? null : name;
-        Array.prototype.forEach.call(legendEl.children, function (c) { c.classList.remove("solo", "off"); });
-        if (soloSrc) {
-          Array.prototype.forEach.call(legendEl.children, function (c) {
-            if (c.textContent.indexOf(name) === -1) c.classList.add("off");
-            else c.classList.add("solo");
-          });
-        }
+        refresh();
       });
       legendEl.appendChild(chip);
     });
+
+    var ibCount = items.filter(function (d) { return d.ib; }).length;
+    if (ibCount) {
+      var chip2 = document.createElement("span");
+      chip2.className = "chip";
+      chip2.dataset.intel = "1";
+      chip2.innerHTML = '<span class="dot" style="background:#ffb86b"></span>情报后台贡献 <span class="n">' + ibCount + "</span>";
+      chip2.addEventListener("click", function () {
+        soloSrc = null;
+        soloIntel = !soloIntel;
+        refresh();
+      });
+      legendEl.appendChild(chip2);
+    }
   })();
 
   /* ---------- 顶部统计 ---------- */
   (function stats() {
     var n = items.length;
     var srcN = new Set(items.map(function (d) { return d.s; })).size;
+    var intelLine = "";
+    if (DATA.intel && DATA.intel.count) {
+      if (srcN < 9) srcN = 9;
+      intelLine = "<br>情报后台接入 <b>" + DATA.intel.count + "</b> 条 · 合并掉重复 <b>" +
+        DATA.intel.merged + "</b> 条 · 净增 <b>" + DATA.intel.added + "</b> 颗星";
+    }
     subEl.innerHTML = esc(DATA.date || "") + " 实时抓取 · <b>" + n + "</b> 颗星 · <b>" +
       edges.length + "</b> 条星线 · <b>" + srcN + "</b> 个信息源" +
       (EVENTS.length ? " · <b>" + EVENTS.length + "</b> 个大事件" : "") +
-      "<br>同一件事的星连成同色星座，悬停一颗点亮整片";
+      intelLine + "<br>同一件事的星连成同色星座，悬停一颗点亮整片";
   })();
 
   /* ---------- 给面板用的接口 ---------- */
@@ -544,6 +584,7 @@
     edges: edges,
     events: EVENTS,
     date: DATA.date,
+    intel: DATA.intel || null,
     errors: DATA.errors || [],
     hover: function () { return hoverId; },
     lang: function () { return isCN; },
